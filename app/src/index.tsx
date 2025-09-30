@@ -1,11 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Model } from './model/model';
+import ModelViewer from './elements/ModelViewer';
+import AltModel from './elements/AltModel';
+import Home from './layouts/Home';
 
 const App = () => (
     <React.Fragment>
-        <span>Hello world</span>
-        <Model />
+        <Home>
+            <ModelViewer />
+        </Home>
     </React.Fragment>
 );
 
