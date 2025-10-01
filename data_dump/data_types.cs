@@ -1,5 +1,5 @@
 ﻿// Relevant to entity_geometry_info.json
-struct EntityGeometryInfo
+export struct EntityGeometryInfo
 {
     public EntityType entityType;
     public string entityId;
@@ -13,13 +13,13 @@ struct EntityGeometryInfo
     public EdgeCurveChain[] edgeCurveChains;
 }
 
-struct EdgeCurveChain
+export struct EdgeCurveChain
 {
     public EdgeType edgeType;
     public EdgeCurve[] edgeCurves;
 }
 
-struct EdgeCurve
+export struct EdgeCurve
 {
     public double[] startPoint;
     public double[] midPoint;
@@ -27,7 +27,7 @@ struct EdgeCurve
     public double[] startPointNormal;
 }
 
-enum EntityType
+export enum EntityType
 {
     ENTITY_TYPE_PLANE,
     ENTITY_TYPE_CYLINDER,
@@ -35,14 +35,14 @@ enum EntityType
     ENTITY_TYPE_NURBS,
 }
 
-enum EdgeType
+export enum EdgeType
 {
     EDGE_TYPE_OUTER,
     EDGE_TYPE_INNER,
 }
 
 // Relevant to adjacency_graph_edge_metadata.json
-enum GraphEdgeType
+export enum GraphEdgeType
 {
     CONCAVE,
     CONVEX,

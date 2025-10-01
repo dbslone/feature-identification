@@ -8,6 +8,8 @@ import { GLTFLoader } from 'three-stdlib';
 
 import HUD from '../HUD';
 
+import detectPockets from '../../lib/detectPockets'
+
 interface ModelEntity {
     bufferGeometry: THREE.BufferGeometry;
     color: string;
@@ -18,12 +20,15 @@ interface ModelEntity {
     const mainCamera = React.useRef();
     const hudCamera = React.useRef();
 
+    const pockets = detectPockets();
+    // return null;
+
     React.useEffect(() => {
         new GLTFLoader().load('./colored_glb.glb', gltf => {
-            console.log({ gltf });
+            // console.log({ gltf });
             const newModuleEntities: ModelEntity[] = [];
             gltf.scene.traverse(element => {
-                console.log({ element });
+                // console.log({ element });
                 if (element.type !== 'Mesh') return;
 
                 const meshElement = element as THREE.Mesh;
