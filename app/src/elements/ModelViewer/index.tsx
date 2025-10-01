@@ -21,7 +21,6 @@ interface ModelEntity {
     const hudCamera = React.useRef();
 
     const pockets = detectPockets();
-    // return null;
 
     React.useEffect(() => {
         new GLTFLoader().load('./colored_glb.glb', gltf => {

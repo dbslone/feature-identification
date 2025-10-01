@@ -5,9 +5,14 @@ import adjacencyGraphEdgeMetadata from '../../../data_dump/adjacency_graph_edge_
 import entityGeometry from '../../../data_dump/entity_geometry_info.json'
 import rgbEntityMap from '../../../data_dump/rgb_id_to_entity_id_map.json'
 
+interface PocketCandidate extends AdjacentEntry {
+    score: number;
+    reasons: string[];
+}
+
 const detectPockets = () => {
-    // console.log({ adjacencyGraph })
-    const graph = {}
+    // Build the graph with full information
+    const graph: Record<string, AdjacentEntry> = {}
 
     Object.entries(adjacencyGraph).forEach(([key, values]) => {
         const geometry = findGeometryInfo(key);
@@ -15,7 +20,7 @@ const detectPockets = () => {
 
         let map: AdjacentEntry = {}
         map.entityId = key
-        map.rgb = rgb[0]
+        map.rgb = rgb?.[0]
         map.geometry = geometry;
 
         map.adjacentEntities = values.map((r): AdjacentEntry => {
@@ -26,32 +31,201 @@ const detectPockets = () => {
         graph[key] = map
     })
 
-    // Find entities with 3-4 adjacent entities
-    let pockets = Object.values(graph).filter((r: AdjacentEntry) => {
-        const hasConcaveEdges = r.adjacentEntities.some(adj => 
-         adj.metadata?.includes('CONCAVE') || adj.metadata?.includes('TANGENT')
-       )
+    // Find pocket candidates using multiple criteria
+    const pocketCandidates: PocketCandidate[] = []
 
-        return r.adjacentEntities.length >= 3 && r.adjacentEntities.length <= 4
+    Object.values(graph).forEach((entry: AdjacentEntry) => {
+        const score = calculatePocketScore(entry, graph)
+
+        if (score.score > 0) {
+            pocketCandidates.push({
+                ...entry,
+                score: score.score,
+                reasons: score.reasons
+            })
+        }
     })
-    console.log({ pockets })
+
+    // Sort by score (highest first)
+    pocketCandidates.sort((a, b) => b.score - a.score)
+
+    console.log({
+        pocketCandidates,
+        totalCandidates: pocketCandidates.length,
+        highConfidence: pocketCandidates.filter(p => p.score >= 3).length
+    })
+
+    return pocketCandidates
 };
 
-const findAdjacentMetadata = (key: string) => {
-    return adjacencyGraphEdgeMetadata[key].map((r: number) => {
-        const edgeType = GraphEdgeType[r];
-        return edgeType;
+const calculatePocketScore = (entry: AdjacentEntry, graph: Record<string, AdjacentEntry>) => {
+    let score = 0
+    const reasons: string[] = []
+
+    if (!entry.adjacentEntities || !entry.geometry) {
+        return { score, reasons }
+    }
+
+    // Criterion 1: Number of adjacent entities (pockets are typically surrounded)
+    const adjacentCount = entry.adjacentEntities.length
+    if (adjacentCount >= 3 && adjacentCount <= 6) {
+        score += 1
+        reasons.push(`Surrounded by ${adjacentCount} entities`)
+    }
+
+    // Criterion 2: Check for concave edges (strong indicator of pockets)
+    const concaveEdges = entry.adjacentEntities.filter(adj =>
+        adj.metadata?.includes(GraphEdgeType.CONCAVE)
+    )
+    const concaveRatio = concaveEdges.length / adjacentCount
+
+    if (concaveRatio >= 0.5) {
+        score += 2
+        reasons.push(`${concaveEdges.length}/${adjacentCount} edges are concave (${(concaveRatio * 100).toFixed(0)}%)`)
+    } else if (concaveEdges.length >= 2) {
+        score += 1
+        reasons.push(`Has ${concaveEdges.length} concave edges`)
+    }
+
+    // Criterion 3: Geometry curvature analysis
+    const hasNegativeCurvature = entry.geometry.minNegRadius && entry.geometry.minNegRadius > 0
+    if (hasNegativeCurvature) {
+        score += 1
+        reasons.push(`Has negative curvature (radius: ${entry.geometry.minNegRadius?.toFixed(2)})`)
+    }
+
+    // Criterion 4: Inner edge loops (holes/pockets often have inner edges)
+    const hasInnerEdges = entry.geometry.edgeCurveChains?.some(chain =>
+        chain.edgeType === 1 // EDGE_TYPE_INNER
+    )
+    if (hasInnerEdges) {
+        score += 1
+        reasons.push('Has inner edge loops')
+    }
+
+    // Criterion 5: Check if entity forms a closed boundary with neighbors
+    if (formsClosedBoundary(entry, graph)) {
+        score += 1
+        reasons.push('Forms closed boundary with neighbors')
+    }
+
+    // Criterion 6: Depth analysis - compare position with neighbors
+    const depthScore = analyzeDepth(entry, graph)
+    if (depthScore > 0) {
+        score += depthScore
+        reasons.push(`Recessed relative to neighbors (depth score: ${depthScore})`)
+    }
+
+    // Criterion 7: Small surface area relative to surroundings
+    if (isRelativelySmall(entry, graph)) {
+        score += 1
+        reasons.push('Small area compared to neighbors')
+    }
+
+    return { score, reasons }
+}
+
+const formsClosedBoundary = (entry: AdjacentEntry, graph: Record<string, AdjacentEntry>): boolean => {
+    if (!entry.adjacentEntities || entry.adjacentEntities.length < 3) {
+        return false
+    }
+
+    // Check if adjacent entities are also connected to each other
+    const adjacentIds = entry.adjacentEntities.map(a => a.entityId).filter(Boolean)
+    let interconnections = 0
+
+    for (let i = 0; i < adjacentIds.length; i++) {
+        const neighbor1 = graph[adjacentIds[i]]
+        if (!neighbor1?.adjacentEntities) continue
+
+        const neighbor1Adjacent = neighbor1.adjacentEntities.map(a => a.entityId)
+
+        for (let j = i + 1; j < adjacentIds.length; j++) {
+            if (neighbor1Adjacent.includes(adjacentIds[j])) {
+                interconnections++
+            }
+        }
+    }
+
+    // If neighbors are well-connected, it suggests a closed region
+    return interconnections >= adjacentIds.length - 1
+}
+
+const analyzeDepth = (entry: AdjacentEntry, graph: Record<string, AdjacentEntry>): number => {
+    if (!entry.geometry?.centerPoint || !entry.adjacentEntities) {
+        return 0
+    }
+
+    const centerPoint = entry.geometry.centerPoint
+    let depthScore = 0
+
+    // Compare center normal direction with neighbors
+    const centerNormal = entry.geometry.centerNormal
+    if (!centerNormal) return 0
+
+    // If normal points inward (opposite to most neighbors), it's likely a pocket
+    let oppositeNormals = 0
+    let totalNeighborsWithNormals = 0
+
+    entry.adjacentEntities.forEach(adj => {
+        const neighborGeometry = graph[adj.entityId!]?.geometry
+        if (neighborGeometry?.centerNormal) {
+            totalNeighborsWithNormals++
+            const dotProduct =
+                centerNormal[0] * neighborGeometry.centerNormal[0] +
+                centerNormal[1] * neighborGeometry.centerNormal[1] +
+                centerNormal[2] * neighborGeometry.centerNormal[2]
+
+            // Negative dot product means normals point in opposite directions
+            if (dotProduct < -0.3) {
+                oppositeNormals++
+            }
+        }
+    })
+
+    if (totalNeighborsWithNormals > 0 && oppositeNormals / totalNeighborsWithNormals > 0.5) {
+        depthScore = 2
+    } else if (oppositeNormals >= 2) {
+        depthScore = 1
+    }
+
+    return depthScore
+}
+
+const isRelativelySmall = (entry: AdjacentEntry, graph: Record<string, AdjacentEntry>): boolean => {
+    if (!entry.geometry?.area || !entry.adjacentEntities) {
+        return false
+    }
+
+    const areas = entry.adjacentEntities
+        .map(adj => graph[adj.entityId!]?.geometry?.area)
+        .filter((area): area is number => area !== undefined && area > 0)
+
+    if (areas.length === 0) return false
+
+    const avgNeighborArea = areas.reduce((sum, area) => sum + area, 0) / areas.length
+
+    // If this entity is less than 50% of average neighbor area, it might be a pocket
+    return entry.geometry.area < avgNeighborArea * 0.5
+}
+
+const findAdjacentMetadata = (key: string): GraphEdgeType[] => {
+    const metadata = adjacencyGraphEdgeMetadata[key]
+    if (!metadata) return []
+
+    return metadata.map((r: number) => {
+        return r as GraphEdgeType
     })
 }
 
-const findGeometryInfo = (entityId: string): EntityGeometryInfo  => {
+const findGeometryInfo = (entityId: string): EntityGeometryInfo | undefined => {
     return entityGeometry.find((r: EntityGeometryInfo) => r.entityId === entityId)
 }
 
 const findRBGEntity = (entityId: string) => {
-    return Object.entries(rgbEntityMap).find((([key, value]) => {
+    return Object.entries(rgbEntityMap).find(([key, value]) => {
         return value === entityId
-    }))
+    })
 }
 
 export default detectPockets;
