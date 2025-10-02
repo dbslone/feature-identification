@@ -1,3 +1,15 @@
 import React from 'react';
 
-const Table = () => <div>Table</div>;
+interface TableProps {
+    children?: React.ReactNode;
+}
+
+const Table: React.FC<TableProps> = ({ children }) => {
+    return (
+        <table>
+            {children}
+        </table>
+    )
+}
+
+export default Table;

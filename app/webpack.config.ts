@@ -1,5 +1,6 @@
 import path from 'path';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 
 const config = {
     entry: "./src/index.tsx",
@@ -39,6 +40,10 @@ const config = {
         port: 4000,
     },
     plugins: [
+        new HtmlWebpackPlugin({
+            inject: true,
+            template: "./index.html",
+        }),
         new ForkTsCheckerWebpackPlugin({
             async: false,
         }),
