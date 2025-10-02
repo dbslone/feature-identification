@@ -1,13 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import ModelViewer from './elements/ModelViewer';
+// Elements
 import Home from './layouts/Home';
+import ModelPockets from "./layouts/ModelPockets";
 
 const App = () => (
     <React.Fragment>
         <Home>
-            <ModelViewer />
+            <ModelPockets />
         </Home>
     </React.Fragment>
 );

@@ -50,7 +50,7 @@ const detectPockets = () => {
     pocketCandidates.sort((a, b) => b.score - a.score)
 
     // Remove pockets that share edges (keep only the highest scoring ones)
-    const filteredPockets = removeOverlappingPockets(pocketCandidates, graph)
+    const filteredPockets = removeOverlappingPockets(pocketCandidates)
 
     console.log({ 
         pocketCandidates,
@@ -64,8 +64,7 @@ const detectPockets = () => {
 };
 
 const removeOverlappingPockets = (
-    pockets: PocketCandidate[], 
-    graph: Record<string, AdjacentEntry>
+    pockets: PocketCandidate[]
 ): PocketCandidate[] => {
     const filtered: PocketCandidate[] = []
     const processedIds = new Set<string>()
@@ -81,7 +80,7 @@ const removeOverlappingPockets = (
 
         // Check if this pocket shares edges with any already selected pocket
         const sharesEdgeWithSelected = filtered.some(selectedPocket => 
-            areAdjacent(pocket, selectedPocket, graph)
+            areAdjacent(pocket, selectedPocket)
         )
 
         if (!sharesEdgeWithSelected) {
@@ -99,8 +98,7 @@ const removeOverlappingPockets = (
 
 const areAdjacent = (
     pocket1: AdjacentEntry, 
-    pocket2: AdjacentEntry, 
-    graph: Record<string, AdjacentEntry>
+    pocket2: AdjacentEntry
 ): boolean => {
     if (!pocket1.entityId || !pocket2.entityId) {
         return false
@@ -114,72 +112,8 @@ const areAdjacent = (
 
     // Check if pocket2 is adjacent to pocket1
     const pocket2AdjacentIds = pocket2.adjacentEntities?.map(a => a.entityId) || []
-    if (pocket2AdjacentIds.includes(pocket1.entityId)) {
-        return true
-    }
-
-    return false
+    return pocket2AdjacentIds.includes(pocket1.entityId);
 }
-
-// Alternative: Merge overlapping pockets into groups
-const groupOverlappingPockets = (
-    pockets: PocketCandidate[], 
-    graph: Record<string, AdjacentEntry>
-): PocketCandidate[][] => {
-    const visited = new Set<string>()
-    const groups: PocketCandidate[][] = []
-
-    for (const pocket of pockets) {
-        if (!pocket.entityId || visited.has(pocket.entityId)) {
-            continue
-        }
-
-        // Start a new group with this pocket
-        const group: PocketCandidate[] = []
-        const stack = [pocket]
-
-        while (stack.length > 0) {
-            const current = stack.pop()!
-            
-            if (!current.entityId || visited.has(current.entityId)) {
-                continue
-            }
-
-            visited.add(current.entityId)
-            group.push(current)
-
-            // Find all other pockets that share edges with current
-            for (const otherPocket of pockets) {
-                if (!otherPocket.entityId || visited.has(otherPocket.entityId)) {
-                    continue
-                }
-
-                if (areAdjacent(current, otherPocket, graph)) {
-                    stack.push(otherPocket)
-                }
-            }
-        }
-
-        if (group.length > 0) {
-            // Sort group by score
-            group.sort((a, b) => b.score - a.score)
-            groups.push(group)
-        }
-    }
-
-    return groups
-}
-
-// // Alternative: Keep best pocket from each overlapping group
-// const selectBestFromGroups = (
-//     pockets: PocketCandidate[],
-//     graph: Record<string, AdjacentEntry>
-// ): PocketCandidate[] => {
-//     const groups = groupOverlappingPockets(pockets, graph)
-//
-//     // Take the highest scoring pocket from each group
-//     return groups.map(group => group[0])
-// }
 
 const calculatePocketScore = (entry: AdjacentEntry, graph: Record<string, AdjacentEntry>) => {
     let score = 0
@@ -189,14 +123,14 @@ const calculatePocketScore = (entry: AdjacentEntry, graph: Record<string, Adjace
         return { score, reasons }
     }
 
-    // Criterion 1: Number of adjacent entities (pockets are typically surrounded)
+    // Criteria 1: Number of adjacent entities (pockets are typically surrounded)
     const adjacentCount = entry.adjacentEntities.length
     if (adjacentCount >= 3 && adjacentCount <= 6) {
         score += 1
         reasons.push(`Surrounded by ${adjacentCount} entities`)
     }
 
-    // Criterion 2: Check for concave edges (strong indicator of pockets)
+    // Criteria 2: Check for concave edges (strong indicator of pockets)
     const concaveEdges = entry.adjacentEntities.filter(adj =>
         adj.metadata?.includes(GraphEdgeType.CONCAVE)
     )
@@ -210,14 +144,14 @@ const calculatePocketScore = (entry: AdjacentEntry, graph: Record<string, Adjace
         reasons.push(`Has ${concaveEdges.length} concave edges`)
     }
 
-    // Criterion 3: Geometry curvature analysis
+    // Criteria 3: Geometry curvature analysis
     const hasNegativeCurvature = entry.geometry.minNegRadius && entry.geometry.minNegRadius > 0
     if (hasNegativeCurvature) {
         score += 1
         reasons.push(`Has negative curvature (radius: ${entry.geometry.minNegRadius?.toFixed(2)})`)
     }
 
-    // Criterion 4: Inner edge loops (holes/pockets often have inner edges)
+    // Criteria 4: Inner edge loops (holes/pockets often have inner edges)
     const hasInnerEdges = entry.geometry.edgeCurveChains?.some(chain =>
         chain.edgeType === 1 // EDGE_TYPE_INNER
     )
@@ -226,20 +160,20 @@ const calculatePocketScore = (entry: AdjacentEntry, graph: Record<string, Adjace
         reasons.push('Has inner edge loops')
     }
 
-    // Criterion 5: Check if entity forms a closed boundary with neighbors
+    // Criteria 5: Check if an entity forms a closed boundary with neighbors
     if (formsClosedBoundary(entry, graph)) {
         score += 1
         reasons.push('Forms closed boundary with neighbors')
     }
 
-    // Criterion 6: Depth analysis - compare position with neighbors
+    // Criteria 6: Depth analysis - compare position with neighbors
     const depthScore = analyzeDepth(entry, graph)
     if (depthScore > 0) {
         score += depthScore
         reasons.push(`Recessed relative to neighbors (depth score: ${depthScore})`)
     }
 
-    // Criterion 7: Small surface area relative to surroundings
+    // Criteria 7: Small surface area relative to surroundings
     if (isRelativelySmall(entry, graph)) {
         score += 1
         reasons.push('Small area compared to neighbors')
@@ -278,8 +212,6 @@ const analyzeDepth = (entry: AdjacentEntry, graph: Record<string, AdjacentEntry>
     if (!entry.geometry?.centerPoint || !entry.adjacentEntities) {
         return 0
     }
-
-    const centerPoint = entry.geometry.centerPoint
     let depthScore = 0
 
     // Compare center normal direction with neighbors
@@ -328,7 +260,7 @@ const isRelativelySmall = (entry: AdjacentEntry, graph: Record<string, AdjacentE
 
     const avgNeighborArea = areas.reduce((sum, area) => sum + area, 0) / areas.length
 
-    // If this entity is less than 50% of average neighbor area, it might be a pocket
+    // If this entity is less than 50% of the average neighbor area, it might be a pocket
     return entry.geometry.area < avgNeighborArea * 0.5
 }
 
@@ -346,7 +278,7 @@ const findGeometryInfo = (entityId: string): EntityGeometryInfo | undefined => {
 }
 
 const findRBGEntity = (entityId: string) => {
-    return Object.entries(rgbEntityMap).find(([key, value]) => {
+    return Object.entries(rgbEntityMap).find(([_key, value]) => {
         return value === entityId
     })
 }

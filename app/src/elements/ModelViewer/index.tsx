@@ -15,13 +15,14 @@ interface ModelEntity {
     color: string;
 }
 
- const ModelViewer = (): JSX.Element => {
+interface ModelViewerProps {
+    graph: Record<string, any>;
+}
+
+ const ModelViewer: React.FC<ModelViewerProps> = ({ graph }): JSX.Element => {
     const [modelEnts, setModelEnts] = React.useState<ModelEntity[]>([]);
     const mainCamera = React.useRef();
     const hudCamera = React.useRef();
-
-    const {filteredPockets, graph} = detectPockets();
-    console.log({ graph, filteredPockets });
 
     React.useEffect(() => {
         new GLTFLoader().load('./colored_glb.glb', gltf => {
