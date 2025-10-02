@@ -10,7 +10,7 @@ interface HomeProps {
 const Home: React.FC<HomeProps> = ({children}) => {
     return (
         <div className={"homelayout-main"}>
-            <Header title="Home Page" />
+            <Header title="Model Viewer" />
 
             <div>{children}</div>
         </div>

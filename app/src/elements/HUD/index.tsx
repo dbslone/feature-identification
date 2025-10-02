@@ -3,7 +3,7 @@ import { useThree } from '@react-three/fiber';
 
 const HUD = () => {
   const { width, height } = useThree(state => state.viewport);
-  const size = 1; // Size of the axes helper
+  const size = 245; // Size of the axes helper
 
   return (
     // The group positions the helper based on the viewport size

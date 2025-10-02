@@ -1,5 +1,7 @@
 import React from "react";
 
+import './index.css';
+
 interface HeaderProps {
     title?: string;
     children?: React.ReactNode;

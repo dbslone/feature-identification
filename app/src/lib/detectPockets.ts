@@ -49,14 +49,137 @@ const detectPockets = () => {
     // Sort by score (highest first)
     pocketCandidates.sort((a, b) => b.score - a.score)
 
-    console.log({
+    // Remove pockets that share edges (keep only the highest scoring ones)
+    const filteredPockets = removeOverlappingPockets(pocketCandidates, graph)
+
+    console.log({ 
         pocketCandidates,
+        filteredPockets,
         totalCandidates: pocketCandidates.length,
-        highConfidence: pocketCandidates.filter(p => p.score >= 3).length
+        filteredCount: filteredPockets.length,
+        highConfidence: filteredPockets.filter(p => p.score >= 5).length
     })
 
-    return pocketCandidates
+    return {filteredPockets, graph}
 };
+
+const removeOverlappingPockets = (
+    pockets: PocketCandidate[], 
+    graph: Record<string, AdjacentEntry>
+): PocketCandidate[] => {
+    const filtered: PocketCandidate[] = []
+    const processedIds = new Set<string>()
+
+    // Process pockets in order of score (highest first)
+    for (const pocket of pockets) {
+        const pocketId = pocket.entityId!
+        
+        // Skip if this pocket has already been marked as overlapping
+        if (processedIds.has(pocketId)) {
+            continue
+        }
+
+        // Check if this pocket shares edges with any already selected pocket
+        const sharesEdgeWithSelected = filtered.some(selectedPocket => 
+            areAdjacent(pocket, selectedPocket, graph)
+        )
+
+        if (!sharesEdgeWithSelected) {
+            // This pocket doesn't overlap with any selected pocket
+            filtered.push(pocket)
+            processedIds.add(pocketId)
+        } else {
+            // Mark as processed but don't include
+            processedIds.add(pocketId)
+        }
+    }
+
+    return filtered
+}
+
+const areAdjacent = (
+    pocket1: AdjacentEntry, 
+    pocket2: AdjacentEntry, 
+    graph: Record<string, AdjacentEntry>
+): boolean => {
+    if (!pocket1.entityId || !pocket2.entityId) {
+        return false
+    }
+
+    // Check if pocket1 is adjacent to pocket2
+    const pocket1AdjacentIds = pocket1.adjacentEntities?.map(a => a.entityId) || []
+    if (pocket1AdjacentIds.includes(pocket2.entityId)) {
+        return true
+    }
+
+    // Check if pocket2 is adjacent to pocket1
+    const pocket2AdjacentIds = pocket2.adjacentEntities?.map(a => a.entityId) || []
+    if (pocket2AdjacentIds.includes(pocket1.entityId)) {
+        return true
+    }
+
+    return false
+}
+
+// Alternative: Merge overlapping pockets into groups
+const groupOverlappingPockets = (
+    pockets: PocketCandidate[], 
+    graph: Record<string, AdjacentEntry>
+): PocketCandidate[][] => {
+    const visited = new Set<string>()
+    const groups: PocketCandidate[][] = []
+
+    for (const pocket of pockets) {
+        if (!pocket.entityId || visited.has(pocket.entityId)) {
+            continue
+        }
+
+        // Start a new group with this pocket
+        const group: PocketCandidate[] = []
+        const stack = [pocket]
+
+        while (stack.length > 0) {
+            const current = stack.pop()!
+            
+            if (!current.entityId || visited.has(current.entityId)) {
+                continue
+            }
+
+            visited.add(current.entityId)
+            group.push(current)
+
+            // Find all other pockets that share edges with current
+            for (const otherPocket of pockets) {
+                if (!otherPocket.entityId || visited.has(otherPocket.entityId)) {
+                    continue
+                }
+
+                if (areAdjacent(current, otherPocket, graph)) {
+                    stack.push(otherPocket)
+                }
+            }
+        }
+
+        if (group.length > 0) {
+            // Sort group by score
+            group.sort((a, b) => b.score - a.score)
+            groups.push(group)
+        }
+    }
+
+    return groups
+}
+
+// // Alternative: Keep best pocket from each overlapping group
+// const selectBestFromGroups = (
+//     pockets: PocketCandidate[],
+//     graph: Record<string, AdjacentEntry>
+// ): PocketCandidate[] => {
+//     const groups = groupOverlappingPockets(pockets, graph)
+//
+//     // Take the highest scoring pocket from each group
+//     return groups.map(group => group[0])
+// }
 
 const calculatePocketScore = (entry: AdjacentEntry, graph: Record<string, AdjacentEntry>) => {
     let score = 0
