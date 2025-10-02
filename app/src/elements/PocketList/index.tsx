@@ -35,6 +35,7 @@ const PocketList: React.FC<PocketListProps> = ({ pockets }) => {
                                         <Circle color={p.rgb} radius={5}/>
                                         <div style={{paddingLeft: '5px'}}>Product_1_{p.entityId}</div>
                                     </div>
+                                    {/* Add drawer to show reasons */}
                                 </TableCell>
                                 <TableCell>100</TableCell>
                             </TableRow>

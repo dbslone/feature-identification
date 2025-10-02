@@ -1,14 +1,12 @@
-import './index.css';
-
+// Libraries
 import * as React from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { GLTFLoader } from 'three-stdlib';
 
-import HUD from '../HUD';
-
-import detectPockets from '../../lib/detectPockets'
+// Styles
+import './index.css';
 
 interface ModelEntity {
     bufferGeometry: THREE.BufferGeometry;
@@ -39,13 +37,18 @@ interface ModelViewerProps {
             });
             setModelEnts(newModuleEntities);
         });
-    }, [])
+    }, []);
+
+     const onCameraChange = (e) => {
+         // The `e.target` refers to the OrbitControls instance
+         const camera = e.target.object;
+         console.log('Camera position changed:', camera.position);
+     };
 
     return (
         <div className="canvas-container">
-            <Canvas camera={{ position: [0, 0, 300] as [number, number, number] }} >
+            <Canvas camera={{ position: [224, 112, 112] as [number, number, number] }} >
                 <ambientLight />
-                <pointLight position={[10, 10, 10]} />
                 <group>
                     {
                         modelEnts.map((ent, index) => {
@@ -61,7 +64,7 @@ interface ModelViewerProps {
                     }
                 </group>
 
-                <OrbitControls makeDefault />
+                <OrbitControls makeDefault onChange={onCameraChange} />
                 <perspectiveCamera ref={mainCamera} position={[5, 5, 5]} />
             </Canvas>
         </div>
