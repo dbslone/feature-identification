@@ -6,6 +6,10 @@ import TableRow from '../TableRow';
 import TableCell from '../TableCell';
 import TableHead from "../TableHead";
 import TableBody from "../TableBody";
+import Circle from "../Circle";
+
+// Styles
+import './index.css';
 
 interface PocketListProps {
     pockets: any[];
@@ -14,19 +18,28 @@ interface PocketListProps {
 const PocketList: React.FC<PocketListProps> = ({ pockets }) => {
     console.log({pockets});
     return (
-        <div>
-            <Table>
+        <div className={"pocket-list-main"}>
+            <Table className={"pocket-list-table"}>
                 <TableHead>
                     <TableRow>
-                        <TableCell>Pocket ID</TableCell>
-                        <TableCell>Pocket Area</TableCell>
+                        <th align="left" style={{ fontWeight: 600 }}>Entity</th>
+                        <th align="right" style={{ fontWeight: 600 }}>Probability</th>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    <TableRow>
-                        <TableCell>1</TableCell>
-                        <TableCell>100</TableCell>
-                    </TableRow>
+                    {pockets.map((p) => {
+                        return (
+                            <TableRow className="pocket-list-row">
+                                <TableCell>
+                                    <div style={{display: 'flex', alignItems: 'center'}}>
+                                        <Circle color={p.rgb} radius={5}/>
+                                        <div style={{paddingLeft: '5px'}}>Product_1_{p.entityId}</div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>100</TableCell>
+                            </TableRow>
+                        )
+                    })}
                 </TableBody>
             </Table>
         </div>

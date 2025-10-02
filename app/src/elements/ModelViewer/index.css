@@ -1,5 +1,11 @@
 .canvas-container {
-    border: 1px solid black;
+    border: 1px solid #a6a6a6;
+    border-radius: 5px;
     height: 400px;
     width: 600px;
+}
+
+.canvas-container:hover {
+    border: 1px solid black;
+    transition: 0.8s;
 }

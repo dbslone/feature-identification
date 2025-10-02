@@ -2,11 +2,13 @@ import React from 'react';
 
 interface TableRowProps {
     children?: React.ReactNode;
+    style?: React.CSSProperties;
+    className?: string;
 }
 
-const TableRow: React.FC<TableRowProps> = ({ children }) => {
+const TableRow: React.FC<TableRowProps> = ({ children, className, style }) => {
     return (
-        <tr>
+        <tr className={className} style={style}>
             {children}
         </tr>
     )

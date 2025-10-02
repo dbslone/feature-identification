@@ -22,7 +22,6 @@ interface ModelViewerProps {
  const ModelViewer: React.FC<ModelViewerProps> = ({ graph }): JSX.Element => {
     const [modelEnts, setModelEnts] = React.useState<ModelEntity[]>([]);
     const mainCamera = React.useRef();
-    const hudCamera = React.useRef();
 
     React.useEffect(() => {
         new GLTFLoader().load('./colored_glb.glb', gltf => {
