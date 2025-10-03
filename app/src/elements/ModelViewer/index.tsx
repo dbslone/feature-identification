@@ -42,7 +42,7 @@ interface ModelViewerProps {
      const onCameraChange = (e) => {
          // The `e.target` refers to the OrbitControls instance
          const camera = e.target.object;
-         console.log('Camera position changed:', camera.position);
+         // console.log('Camera position changed:', camera.position);
      };
 
     return (

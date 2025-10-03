@@ -24,7 +24,7 @@
 
 /* Set specific widths for columns */
 .pocket-list-table th:nth-child(1),
-.pocket-list-tabletd:nth-child(1) {
+.pocket-list-table td:nth-child(1) {
     width: 75%;
 }
 
@@ -39,8 +39,10 @@
     align-items: center;
     margin-bottom: 10px;
     margin-top: 5px;
+    padding-left: 5px;
     cursor: pointer;
 }
-.pocket-list-row:hover {
-    background-color: #cfcccc;
-}
+/*.pocket-list-row:hover {*/
+/*    background-color: #dddddd;*/
+/*    transition: 0.4s;*/
+/*}*/

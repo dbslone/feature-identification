@@ -1,12 +1,20 @@
 import React from 'react';
 
 interface DrawerProps {
-    children?: React.ReactNode;
+    reasons?: string[];
 }
-const Drawer: React.FC<DrawerProps> = ({ children }) => {
+const Drawer: React.FC<DrawerProps> = ({ reasons }) => {
     return (
         <div>
-            Drawer
+            <ul>
+                {reasons?.map((reason, idx) => {
+                    return (
+                        <li key={idx}>{reason}</li>
+                    )
+                })}
+            </ul>
         </div>
     )
 }
+
+export default Drawer;
