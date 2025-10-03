@@ -3,7 +3,11 @@ import * as React from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
+import { EffectComposer } from '@react-three/postprocessing';
 import { GLTFLoader } from 'three-stdlib';
+
+// Elements
+import HighlightableMesh from '../HighlightableMesh';
 
 // Styles
 import './index.css';
@@ -39,32 +43,34 @@ interface ModelViewerProps {
         });
     }, []);
 
-     const onCameraChange = (e) => {
-         // The `e.target` refers to the OrbitControls instance
-         const camera = e.target.object;
-         // console.log('Camera position changed:', camera.position);
-     };
+     // const onCameraChange = (e) => {
+     //     // The `e.target` refers to the OrbitControls instance
+     //     const camera = e.target.object;
+     //     // console.log('Camera position changed:', camera.position);
+     // };
 
     return (
         <div className="canvas-container">
             <Canvas camera={{ position: [224, 112, 112] as [number, number, number] }} >
                 <ambientLight />
-                <group>
-                    {
-                        modelEnts.map((ent, index) => {
-                            return (
-                                <mesh
-                                    geometry={ent.bufferGeometry}
-                                    key={index}
-                                >
-                                    <meshStandardMaterial color={ent.color} />
-                                </mesh>
-                            )
-                        })
-                    }
-                </group>
+                <EffectComposer>
+                    <group>
+                        {
+                            modelEnts.map((ent, index) => {
+                                return (
+                                    <HighlightableMesh
+                                        geometry={ent.bufferGeometry}
+                                        index={index}
+                                    >
+                                        <meshStandardMaterial color={ent.color} />
+                                    </HighlightableMesh>
+                                )
+                            })
+                        }
+                    </group>
+                </EffectComposer>
 
-                <OrbitControls makeDefault onChange={onCameraChange} />
+                <OrbitControls makeDefault />
                 <perspectiveCamera ref={mainCamera} position={[5, 5, 5]} />
             </Canvas>
         </div>
