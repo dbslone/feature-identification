@@ -1,15 +1,21 @@
 import React, { useRef, useState } from 'react';
-import { Outline } from '@react-three/postprocessing';
 
 interface HighlightableMeshProps {
-    geometry: THREE.BufferGeometry,
-    index: React.Key,
+    geometry: THREE.BufferGeometry;
+    index: React.Key;
     children?: React.ReactNode;
+    setSelectedMesh: any;
 }
 
-const HighlightableMesh: React.FC<HighlightableMeshProps> = ({ geometry, index, children }) => {
+const HighlightableMesh: React.FC<HighlightableMeshProps> = ({ geometry, index, children, setSelectedMesh }) => {
     const meshRef = useRef();
     const [hovered, setHovered] = useState(false);
+
+    const onHoverOver = () => {
+        console.log('hovered')
+        setHovered(true);
+        setSelectedMesh([meshRef.current])
+    }
     console.log({hovered, index, meshRef})
     return (
         <mesh
@@ -20,8 +26,6 @@ const HighlightableMesh: React.FC<HighlightableMeshProps> = ({ geometry, index, 
             onPointerOut={() => setHovered(false)}
         >
             {children}
-            {/* Conditionally render Outline on hover */}
-            {hovered && <Outline width={2} edgeStrength={100} selection={[meshRef.current]} visibleEdgeColor={0x00ff00} />}
         </mesh>
     );
 }

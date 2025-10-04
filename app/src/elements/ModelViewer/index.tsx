@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { EffectComposer } from '@react-three/postprocessing';
+import {EffectComposer, Outline} from '@react-three/postprocessing';
 import { GLTFLoader } from 'three-stdlib';
 
 // Elements
@@ -19,9 +19,11 @@ interface ModelEntity {
 
 interface ModelViewerProps {
     graph: Record<string, any>;
+    selectedMesh: any[];
+    setSelectedMesh: any;
 }
 
- const ModelViewer: React.FC<ModelViewerProps> = ({ graph }): JSX.Element => {
+ const ModelViewer: React.FC<ModelViewerProps> = ({ graph, selectedMesh, setSelectedMesh }): JSX.Element => {
     const [modelEnts, setModelEnts] = React.useState<ModelEntity[]>([]);
     const mainCamera = React.useRef();
 
@@ -53,7 +55,6 @@ interface ModelViewerProps {
         <div className="canvas-container">
             <Canvas camera={{ position: [224, 112, 112] as [number, number, number] }} >
                 <ambientLight />
-                <EffectComposer>
                     <group>
                         {
                             modelEnts.map((ent, index) => {
@@ -61,6 +62,7 @@ interface ModelViewerProps {
                                     <HighlightableMesh
                                         geometry={ent.bufferGeometry}
                                         index={index}
+                                        setSelectedMesh={setSelectedMesh}
                                     >
                                         <meshStandardMaterial color={ent.color} />
                                     </HighlightableMesh>
@@ -68,6 +70,10 @@ interface ModelViewerProps {
                             })
                         }
                     </group>
+
+
+                <EffectComposer>
+                    {/*{selectedMesh.length >= 0 && <Outline width={2} edgeStrength={100} selection={selectedMesh} visibleEdgeColor={0x00ff00} />}*/}
                 </EffectComposer>
 
                 <OrbitControls makeDefault />

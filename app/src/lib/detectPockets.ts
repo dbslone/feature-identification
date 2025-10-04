@@ -14,6 +14,7 @@ const detectPockets = () => {
     // Build the graph with full information
     const graph: Record<string, AdjacentEntry> = {}
 
+    //TODO: This should be moved to a separate function
     Object.entries(adjacencyGraph).forEach(([key, values]) => {
         const geometry = findGeometryInfo(key);
         const rgb = findRBGEntity(key)
@@ -52,13 +53,13 @@ const detectPockets = () => {
     // Remove pockets that share edges (keep only the highest scoring ones)
     const filteredPockets = removeOverlappingPockets(pocketCandidates)
 
-    console.log({ 
-        pocketCandidates,
-        filteredPockets,
-        totalCandidates: pocketCandidates.length,
-        filteredCount: filteredPockets.length,
-        highConfidence: filteredPockets.filter(p => p.score >= 5).length
-    })
+    // console.log({
+    //     pocketCandidates,
+    //     filteredPockets,
+    //     totalCandidates: pocketCandidates.length,
+    //     filteredCount: filteredPockets.length,
+    //     highConfidence: filteredPockets.filter(p => p.score >= 5).length
+    // })
 
     return {filteredPockets, graph}
 };
@@ -148,7 +149,7 @@ const calculatePocketScore = (entry: AdjacentEntry, graph: Record<string, Adjace
     const hasNegativeCurvature = entry.geometry.minNegRadius && entry.geometry.minNegRadius > 0
     if (hasNegativeCurvature) {
         score += 1
-        reasons.push(`Has negative curvature (radius: ${entry.geometry.minNegRadius?.toFixed(2)})`)
+        reasons.push(`Has negative curvature`)
     }
 
     // Criteria 4: Inner edge loops (holes/pockets often have inner edges)
