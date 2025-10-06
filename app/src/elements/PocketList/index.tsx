@@ -10,7 +10,7 @@ import Circle from "../Circle";
 import Drawer from "../Drawer";
 
 // Icons
-import { IconEye, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 
 // Styles
 import './index.css';
@@ -22,8 +22,18 @@ interface PocketListProps {
 const PocketList: React.FC<PocketListProps> = ({ pockets }) => {
     const [detailsIndex, setDetailsIndex] = useState<number>(-1);
 
-    const onToggleDetails = (idx) => () => {
+    const onToggleDetails = (idx: number) => () => {
         setDetailsIndex(detailsIndex === idx ? -1 : idx);
+    }
+
+    const scoreToConfidence = (score: number) => {
+        if (score >= 5) {
+            return 'High'
+        } else if (score < 5 && score >= 3) {
+            return 'Medium'
+        } else {
+            return 'Low';
+        }
     }
 
     console.log({pockets});
@@ -33,7 +43,7 @@ const PocketList: React.FC<PocketListProps> = ({ pockets }) => {
                 <TableHead>
                     <TableRow style={{ paddingLeft: '5px' }}>
                         <th align="left" style={{ fontWeight: 600 }}>Entity</th>
-                        <th align="right" style={{ fontWeight: 600 }}>Probability</th>
+                        <th align="right" style={{ fontWeight: 600 }}>Confidence</th>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -49,9 +59,8 @@ const PocketList: React.FC<PocketListProps> = ({ pockets }) => {
                                     </TableCell>
                                     <TableCell>
                                         <div style={{display: 'flex', alignItems: 'center'}}>
-                                            <div>{p.score * 10}%</div>
-                                            <div>
-                                                <IconEye size={22} color="gray" role="button" title="View Pocket" aria-label="View Pocket" />
+                                            <div>{scoreToConfidence(p.score)}</div>
+                                            <div style={{ cursor: 'pointer' }}>
                                                 {idx === detailsIndex
                                                     ? <IconChevronUp size={22} color="black" title="Hide Details" aria-label="Hide Details" onClick={onToggleDetails(idx)} />
                                                     : <IconChevronDown size={22} color="gray" title="Show Details" aria-label="Show Details" onClick={onToggleDetails(idx)} />

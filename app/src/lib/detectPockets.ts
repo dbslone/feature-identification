@@ -148,7 +148,7 @@ const calculatePocketScore = (entry: AdjacentEntry, graph: Record<string, Adjace
     const hasNegativeCurvature = entry.geometry.minNegRadius && entry.geometry.minNegRadius > 0
     if (hasNegativeCurvature) {
         score += 1
-        reasons.push(`Has negative curvature (radius: ${entry.geometry.minNegRadius?.toFixed(2)})`)
+        reasons.push(`Has negative curvature`)
     }
 
     // Criteria 4: Inner edge loops (holes/pockets often have inner edges)
