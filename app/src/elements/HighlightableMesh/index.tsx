@@ -12,17 +12,16 @@ const HighlightableMesh: React.FC<HighlightableMeshProps> = ({ geometry, index, 
     const [hovered, setHovered] = useState(false);
 
     const onHoverOver = () => {
-        console.log('hovered')
         setHovered(true);
         setSelectedMesh([meshRef.current])
     }
-    console.log({hovered, index, meshRef})
+
     return (
         <mesh
             geometry={geometry}
             key={index}
             ref={meshRef}
-            onPointerOver={() => setHovered(true)}
+            onPointerOver={onHoverOver}
             onPointerOut={() => setHovered(false)}
         >
             {children}
