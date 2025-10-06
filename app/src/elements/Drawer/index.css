@@ -1,0 +1,10 @@
+.drawer-adjacent-toggle {
+    display: flex;
+    margin-left: 15px;
+    color: blue;
+    cursor: pointer;
+}
+
+.drawer-adjacent-edges {
+    margin: 0;
+}

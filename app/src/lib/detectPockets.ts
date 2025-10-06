@@ -14,6 +14,7 @@ const detectPockets = () => {
     // Build the graph with full information
     const graph: Record<string, AdjacentEntry> = {}
 
+    //TODO: This should be moved to a separate function so this function does not need to export both graph and pockets
     Object.entries(adjacencyGraph).forEach(([key, values]) => {
         const geometry = findGeometryInfo(key);
         const rgb = findRBGEntity(key)
@@ -52,13 +53,13 @@ const detectPockets = () => {
     // Remove pockets that share edges (keep only the highest scoring ones)
     const filteredPockets = removeOverlappingPockets(pocketCandidates)
 
-    console.log({ 
-        pocketCandidates,
-        filteredPockets,
-        totalCandidates: pocketCandidates.length,
-        filteredCount: filteredPockets.length,
-        highConfidence: filteredPockets.filter(p => p.score >= 5).length
-    })
+    // console.log({
+    //     pocketCandidates,
+    //     filteredPockets,
+    //     totalCandidates: pocketCandidates.length,
+    //     filteredCount: filteredPockets.length,
+    //     highConfidence: filteredPockets.filter(p => p.score >= 5).length
+    // })
 
     return {filteredPockets, graph}
 };

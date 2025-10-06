@@ -4,11 +4,12 @@ interface TableRowProps {
     children?: React.ReactNode;
     style?: React.CSSProperties;
     className?: string;
+    onClick?: any;
 }
 
-const TableRow: React.FC<TableRowProps> = ({ children, className, style }) => {
+const TableRow: React.FC<TableRowProps> = ({ children, className, style, onClick }) => {
     return (
-        <tr className={className} style={style}>
+        <tr className={className} style={style} onClick={onClick}>
             {children}
         </tr>
     )

@@ -25,7 +25,6 @@ interface ModelViewerProps {
         new GLTFLoader().load('./colored_glb.glb', gltf => {
             const newModuleEntities: ModelEntity[] = [];
             gltf.scene.traverse(element => {
-                // console.log({ element });
                 if (element.type !== 'Mesh') return;
 
                 const rgb = graph[element.name.split('_').pop()]?.rgb;
@@ -38,12 +37,6 @@ interface ModelViewerProps {
             setModelEnts(newModuleEntities);
         });
     }, []);
-
-     const onCameraChange = (e) => {
-         // The `e.target` refers to the OrbitControls instance
-         const camera = e.target.object;
-         // console.log('Camera position changed:', camera.position);
-     };
 
     return (
         <div className="canvas-container">
@@ -64,7 +57,7 @@ interface ModelViewerProps {
                     }
                 </group>
 
-                <OrbitControls makeDefault onChange={onCameraChange} />
+                <OrbitControls makeDefault />
                 <perspectiveCamera ref={mainCamera} position={[5, 5, 5]} />
             </Canvas>
         </div>

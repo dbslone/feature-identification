@@ -36,7 +36,6 @@ const PocketList: React.FC<PocketListProps> = ({ pockets }) => {
         }
     }
 
-    console.log({pockets});
     return (
         <div className={"pocket-list-main"}>
             <Table className={"pocket-list-table"}>
@@ -58,7 +57,7 @@ const PocketList: React.FC<PocketListProps> = ({ pockets }) => {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div style={{display: 'flex', alignItems: 'center'}}>
+                                        <div style={{display: 'flex'}}>
                                             <div>{scoreToConfidence(p.score)}</div>
                                             <div style={{ cursor: 'pointer' }}>
                                                 {idx === detailsIndex
@@ -69,7 +68,7 @@ const PocketList: React.FC<PocketListProps> = ({ pockets }) => {
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                                {idx === detailsIndex && <Drawer reasons={p.reasons} />}
+                                {idx === detailsIndex && <Drawer reasons={p.reasons} adjacentEdges={p.adjacentEntities} />}
                             </>
                         )
                     })}
